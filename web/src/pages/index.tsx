@@ -1,11 +1,20 @@
 import React from 'react';
 import {Navbar} from "../components/Navbar";
+import {withUrqlClient} from "next-urql";
+import {createUrqlClient} from "../utils/createUrqlClient";
+import {usePostsQuery} from "../generated/graphql";
 
-const Index = () => (
-    <>
-        <Navbar />
-        <div>Hello world</div>
-    </>
-)
+const Index = () => {
+    const [{data}] = usePostsQuery();
 
-export default Index
+    return (
+        <>
+            <Navbar />
+            <div>Hello world</div>
+            <br />
+            {!data ? null : data.posts.map((p) => <div key={p.id}>{p.title}</div>)}
+        </>
+    )
+}
+
+export default withUrqlClient(createUrqlClient, {ssr: true})(Index)
