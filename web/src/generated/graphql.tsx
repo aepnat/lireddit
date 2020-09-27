@@ -1,6 +1,5 @@
 import gql from "graphql-tag";
 import * as Urql from "urql";
-
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
@@ -30,18 +29,21 @@ export type QueryPostArgs = {
 export type Post = {
   __typename?: "Post";
   id: Scalars["Int"];
+  title: Scalars["String"];
+  text: Scalars["String"];
+  points: Scalars["Float"];
+  creatorId: Scalars["Float"];
   createdAt: Scalars["String"];
   updatedAt: Scalars["String"];
-  title: Scalars["String"];
 };
 
 export type User = {
   __typename?: "User";
   id: Scalars["Int"];
-  createdAt: Scalars["String"];
-  updatedAt: Scalars["String"];
   username: Scalars["String"];
   email: Scalars["String"];
+  createdAt: Scalars["String"];
+  updatedAt: Scalars["String"];
 };
 
 export type Mutation = {
@@ -57,7 +59,7 @@ export type Mutation = {
 };
 
 export type MutationCreatePostArgs = {
-  title: Scalars["String"];
+  input: PostInput;
 };
 
 export type MutationUpdatePostArgs = {
@@ -87,6 +89,11 @@ export type MutationLoginArgs = {
   usernameOrEmail: Scalars["String"];
 };
 
+export type PostInput = {
+  title: Scalars["String"];
+  text: Scalars["String"];
+};
+
 export type UserResponse = {
   __typename?: "UserResponse";
   errors?: Maybe<Array<FieldError>>;
@@ -112,7 +119,7 @@ export type RegularErrorFragment = { __typename?: "FieldError" } & Pick<
 
 export type RegularUserFragment = { __typename?: "User" } & Pick<
   User,
-  "id" | "username"
+  "id" | "username" | "email"
 >;
 
 export type RegularUserResponseFragment = { __typename?: "UserResponse" } & {
@@ -127,6 +134,17 @@ export type ChangePasswordMutationVariables = Exact<{
 
 export type ChangePasswordMutation = { __typename?: "Mutation" } & {
   changePassword: { __typename?: "UserResponse" } & RegularUserResponseFragment;
+};
+
+export type CreatePostMutationVariables = Exact<{
+  input: PostInput;
+}>;
+
+export type CreatePostMutation = { __typename?: "Mutation" } & {
+  createPost: { __typename?: "Post" } & Pick<
+    Post,
+    "id" | "title" | "text" | "points" | "creatorId" | "createdAt" | "updatedAt"
+  >;
 };
 
 export type ForgotPasswordMutationVariables = Exact<{
@@ -189,6 +207,7 @@ export const RegularUserFragmentDoc = gql`
   fragment RegularUser on User {
     id
     username
+    email
   }
 `;
 export const RegularUserResponseFragmentDoc = gql`
@@ -217,6 +236,25 @@ export function useChangePasswordMutation() {
     ChangePasswordMutation,
     ChangePasswordMutationVariables
   >(ChangePasswordDocument);
+}
+export const CreatePostDocument = gql`
+  mutation CreatePost($input: PostInput!) {
+    createPost(input: $input) {
+      id
+      title
+      text
+      points
+      creatorId
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export function useCreatePostMutation() {
+  return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(
+    CreatePostDocument
+  );
 }
 export const ForgotPasswordDocument = gql`
   mutation ForgotPassword($email: String!) {

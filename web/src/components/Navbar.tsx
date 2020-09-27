@@ -19,7 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
     body = (
       <>
         <NextLink href="/login">
-          <Link mr={2}>Login</Link>
+          <Link mr={4}>Login</Link>
         </NextLink>
         <NextLink href="/register">
           <Link>Register</Link>
@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
   } else {
     body = (
       <Flex>
-        <Box mr={2}>{data.me.username}</Box>
+        <Box mr={4}>{data.me.email}</Box>
         <Button
           onClick={() => {
             logout().then();
@@ -46,7 +46,16 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
   }
 
   return (
-    <Flex bg="white" borderBottom="1px" borderColor="gray.200" p={4} ml="auto">
+    <Flex
+      position="sticky"
+      top={0}
+      zIndex={10}
+      bg="white"
+      borderBottom="1px"
+      borderColor="gray.200"
+      p={4}
+      ml="auto"
+    >
       <Box ml="auto" color="gray.500" fontWeight={700}>
         {body}
       </Box>
