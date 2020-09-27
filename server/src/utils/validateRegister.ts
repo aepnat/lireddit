@@ -37,5 +37,5 @@ export const validateRegister = (options: UsernamePasswordInput) => {
     ];
   }
 
-  return [];
+  return false;
 };
