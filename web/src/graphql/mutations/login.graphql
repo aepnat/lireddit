@@ -1,11 +1,11 @@
 mutation Login($options: UsernamePasswordInput!) {
-    login(options: $options) {
-        errors {
-            fields
-            message
-        }
-        user {
-            ...RegulerUser
-        }
+  login(options: $options) {
+    errors {
+      fields
+      message
     }
+    user {
+      ...RegulerUser
+    }
+  }
 }

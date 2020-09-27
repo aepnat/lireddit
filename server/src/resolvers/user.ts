@@ -1,150 +1,164 @@
-import {Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver} from "type-graphql";
-import {MyContext} from "../types";
-import {User} from "../entities/User";
+import {
+  Arg,
+  Ctx,
+  Field,
+  InputType,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+} from "type-graphql";
+import { MyContext } from "../types";
+import { User } from "../entities/User";
 import argon2 from "argon2";
-import {EntityManager} from "@mikro-orm/postgresql";
-import {COOKIE_NAME} from "../constants";
+import { EntityManager } from "@mikro-orm/postgresql";
+import { COOKIE_NAME } from "../constants";
 
 @InputType()
 class UsernamePasswordInput {
-    @Field()
-    username: string
-    @Field()
-    password: string
+  @Field()
+  username: string;
+  @Field()
+  password: string;
 }
 
 @ObjectType()
 class FieldError {
-    @Field()
-    fields: string
+  @Field()
+  fields: string;
 
-    @Field()
-    message: string
+  @Field()
+  message: string;
 }
 
 @ObjectType()
 class UserResponse {
-    @Field(() => [FieldError], {nullable: true})
-    errors?: FieldError[]
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
 
-    @Field(() => User, {nullable: true})
-    user?: User
+  @Field(() => User, { nullable: true })
+  user?: User;
 }
 
 @Resolver()
 export class UserResolver {
-    @Query(() => User, {nullable: true})
-    async me(
-        @Ctx() { em, req }: MyContext
-    ) {
-        if (!req.session.userId) {
-            return null
-        }
-
-        return await em.findOne(User, {id: req.session.userId});
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { em, req }: MyContext) {
+    if (!req.session.userId) {
+      return null;
     }
 
-    @Mutation(() => UserResponse)
-    async register(
-        @Arg("options") options: UsernamePasswordInput,
-        @Ctx() {em, req}: MyContext
-    ): Promise<UserResponse> {
-        if (options.username.length <= 2) {
-            return {
-                errors: [
-                    {
-                        fields: 'username',
-                        message: 'length must be greater than 2'
-                    }
-                ]
-            }
-        }
-        if (options.password.length <= 2) {
-            return {
-                errors: [
-                    {
-                        fields: 'password',
-                        message: 'length must be greater than 2'
-                    }
-                ]
-            }
-        }
+    return await em.findOne(User, { id: req.session.userId });
+  }
 
-        const hashPassword = await argon2.hash(options.password);
-        let user;
-        try {
-            const result = await (em as EntityManager).createQueryBuilder(User).getKnexQuery().insert({
-                username: options.username,
-                password: hashPassword,
-                created_at: new Date(),
-                updated_at: new Date()
-            }).returning("*");
-
-            user = result[0];
-        } catch (err) {
-            // duplicate username error
-            if (err.code === '23505') { //|| err.detail.includes("already exists")) {
-                return {
-                    errors: [
-                        {
-                            fields: 'username',
-                            message: 'username already taken',
-                        }
-                    ]
-                }
-            }
-        }
-
-        req.session.userId = user.id;
-
-        return {user};
+  @Mutation(() => UserResponse)
+  async register(
+    @Arg("options") options: UsernamePasswordInput,
+    @Ctx() { em, req }: MyContext
+  ): Promise<UserResponse> {
+    if (options.username.length <= 2) {
+      return {
+        errors: [
+          {
+            fields: "username",
+            message: "length must be greater than 2",
+          },
+        ],
+      };
+    }
+    if (options.password.length <= 2) {
+      return {
+        errors: [
+          {
+            fields: "password",
+            message: "length must be greater than 2",
+          },
+        ],
+      };
     }
 
-    @Mutation(() => UserResponse)
-    async login(
-        @Arg("options") options: UsernamePasswordInput,
-        @Ctx() { em, req }: MyContext
-    ): Promise<UserResponse> {
-        const user = await em.findOne(User, {username: options.username.toLowerCase()});
-        if (!user) {
-            return {
-                errors: [
-                    {
-                        fields: 'username',
-                        message: 'that username doesn\'t exists',
-                    }
-                ]
-            };
-        }
-        const valid = await argon2.verify(user.password, options.password);
-        if (!valid) {
-            return {
-                errors: [
-                    {
-                        fields: 'password',
-                        message: 'incorrect password',
-                    }
-                ]
-            };
-        }
+    const hashPassword = await argon2.hash(options.password);
+    let user;
+    try {
+      const result = await (em as EntityManager)
+        .createQueryBuilder(User)
+        .getKnexQuery()
+        .insert({
+          username: options.username,
+          password: hashPassword,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning("*");
 
-        req.session.userId = user.id;
-
-        return {user};
+      user = result[0];
+    } catch (err) {
+      // duplicate username error
+      if (err.code === "23505") {
+        //|| err.detail.includes("already exists")) {
+        return {
+          errors: [
+            {
+              fields: "username",
+              message: "username already taken",
+            },
+          ],
+        };
+      }
     }
 
-    @Mutation(() => Boolean)
-    logout(
-        @Ctx() {req, res}: MyContext
-    ){
-        return new Promise(resolve => req.session.destroy(err => {
-            res.clearCookie(COOKIE_NAME);
-            if(err) {
-               resolve(false);
-               return;
-           }
+    req.session.userId = user.id;
 
-            resolve(true);
-        }));
+    return { user };
+  }
+
+  @Mutation(() => UserResponse)
+  async login(
+    @Arg("options") options: UsernamePasswordInput,
+    @Ctx() { em, req }: MyContext
+  ): Promise<UserResponse> {
+    const user = await em.findOne(User, {
+      username: options.username.toLowerCase(),
+    });
+    if (!user) {
+      return {
+        errors: [
+          {
+            fields: "username",
+            message: "that username doesn't exists",
+          },
+        ],
+      };
     }
+    const valid = await argon2.verify(user.password, options.password);
+    if (!valid) {
+      return {
+        errors: [
+          {
+            fields: "password",
+            message: "incorrect password",
+          },
+        ],
+      };
+    }
+
+    req.session.userId = user.id;
+
+    return { user };
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: MyContext) {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          resolve(false);
+          return;
+        }
+
+        resolve(true);
+      })
+    );
+  }
 }

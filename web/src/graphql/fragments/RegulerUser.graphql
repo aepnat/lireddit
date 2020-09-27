@@ -1,4 +1,4 @@
 fragment RegulerUser on User {
-    id
-    username
+  id
+  username
 }
