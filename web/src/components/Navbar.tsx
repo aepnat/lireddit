@@ -55,7 +55,11 @@ const Navbar: React.FC<NavbarProps> = ({}) => {
       ml="auto"
     >
       <Flex maxWidth="800px" alignItems="center" p={4} mx="auto">
-        <Heading>LiReddit</Heading>
+        <NextLink href="/">
+          <Link>
+            <Heading>LiReddit</Heading>
+          </Link>
+        </NextLink>
         <Box ml="auto" fontWeight={700}>
           {body}
         </Box>
