@@ -6,7 +6,7 @@ import { useCreatePostMutation } from "../generated/graphql";
 import { useRouter } from "next/router";
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
-import { Layout } from "../components/Layout";
+import Layout from "../components/Layout";
 import { useIsAuth } from "../utils/useIsAuth";
 
 interface CreatePostProps {}
